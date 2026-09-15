@@ -1,0 +1,28 @@
+{
+  "pos_x": 305,
+  "pos_y": 568,
+  "size": 600,
+  "opacity": 1.0,
+  "speed": 4.0,
+  "current_media": "D:/Downloads/Chika Dance Green Screen (With Sound) - Here Comes Ben (1080p, h264).mp4",
+  "media_library": [
+    "D:/Downloads/Chika Dance Green Screen (With Sound) - Here Comes Ben (1080p, h264).mp4",
+    "C:/Users/sachi/OneDrive/Desktop/desktop_pet/desktop_pet/assets/Goku.mp4",
+    "C:/Users/sachi/OneDrive/Desktop/desktop_pet/desktop_pet/assets/Kanna Umbrella Green Screen_mpl21yhfKn0.mp4",
+    "C:\\Users\\sachi\\OneDrive\\Desktop\\desktop_pet\\desktop_pet\\assets\\\u2714\ufe0fGREEN SCREEN EFFECTS\uff1a anime girl - Mai Sakurajima_-V4hqBELByw.mp4"
+  ],
+  "chroma_lower": [
+    35,
+    40,
+    40
+  ],
+  "chroma_upper": [
+    90,
+    255,
+    255
+  ],
+  "auto_hide_on_fullscreen": true,
+  "click_through": false,
+  "roam_enabled": true,
+  "roam_speed": 6.0
+}
