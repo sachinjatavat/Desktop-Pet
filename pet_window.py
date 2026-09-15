@@ -74,10 +74,56 @@ class PetWindow(QWidget):
     # ------------------------------------------------------------------
     # Media loading / playback
     # ------------------------------------------------------------------
+    def _resolve_media_path(self, path):
+        if not path:
+            return None
+        if os.path.exists(path):
+            return os.path.abspath(path)
+
+        filename = os.path.basename(path)
+        app_dir = config_manager.get_app_dir()
+
+        candidates = [
+            os.path.join(app_dir, path),
+            os.path.join(app_dir, "assets", filename),
+            os.path.join(app_dir, "assets", path),
+        ]
+        for candidate in candidates:
+            if os.path.exists(candidate):
+                return os.path.abspath(candidate)
+        return None
+
+    def _get_available_media_library(self):
+        valid_paths = []
+        seen_basenames = set()
+
+        # 1. Automatically scan assets directory
+        assets_dir = os.path.join(config_manager.get_app_dir(), "assets")
+        if os.path.exists(assets_dir):
+            for fname in sorted(os.listdir(assets_dir)):
+                ext = os.path.splitext(fname)[1].lower()
+                if ext in {".mp4", ".mov", ".webm", ".avi", ".mkv", ".gif", ".png", ".webp"}:
+                    full = os.path.abspath(os.path.join(assets_dir, fname))
+                    valid_paths.append(full)
+                    seen_basenames.add(fname.lower())
+
+        # 2. Include any additional paths saved in user config
+        for p in self.config.get("media_library", []):
+            resolved = self._resolve_media_path(p)
+            if resolved:
+                fname = os.path.basename(resolved).lower()
+                if fname not in seen_basenames:
+                    valid_paths.append(resolved)
+                    seen_basenames.add(fname)
+
+        return valid_paths
+
     def _load_media(self, path):
-        if not path or not os.path.exists(path):
+        resolved = self._resolve_media_path(path)
+        if not resolved:
             self._show_placeholder()
             return
+        path = resolved
 
         self._stop_all_playback()
         kind = media_kind(path)
@@ -255,7 +301,7 @@ class PetWindow(QWidget):
         add_url_action = menu.addAction("Add Video from Link...")
         add_url_action.triggered.connect(self.add_media_from_url)
 
-        if self.config["media_library"]:
+        if self._get_available_media_library():
             menu.addMenu(self._build_library_menu())
 
         menu.addSeparator()
@@ -327,12 +373,29 @@ class PetWindow(QWidget):
 
     def _build_library_menu(self):
         m = QMenu("Choose Character", self)
-        for path in self.config["media_library"]:
-            name = os.path.basename(path)
-            act = QAction(name, self)
-            act.triggered.connect(lambda checked, p=path: self._load_media(p))
+        available = self._get_available_media_library()
+        if not available:
+            no_act = m.addAction("No characters found")
+            no_act.setEnabled(False)
+            return m
+
+        current = self.config.get("current_media")
+        current_resolved = self._resolve_media_path(current) if current else None
+
+        for path in available:
+            raw_name = os.path.basename(path)
+            display_name = os.path.splitext(raw_name)[0]
+            act = QAction(display_name, self)
+            act.setCheckable(True)
+            if current_resolved and os.path.normpath(path).lower() == os.path.normpath(current_resolved).lower():
+                act.setChecked(True)
+
+            act.triggered.connect(self._make_character_switch_handler(path))
             m.addAction(act)
         return m
+
+    def _make_character_switch_handler(self, path):
+        return lambda checked=False: self._load_media(path)
 
     # ------------------------------------------------------------------
     # Actions
